@@ -52,7 +52,7 @@ steps:
   displayName: 'Generate DB migration script for MedPark.CustomersService'
   inputs:
     script: 'dotnet ef migrations script --project $(proj-dir)/MedPark.CustomersService.csproj -i -o $(build.artifactstagingdirectory)/sql/MedPark.Customers_DB_Migrations.sql'
-  enabled: true
+  enabled: false
 
 - task: DotNetCoreCLI@2
   displayName: 'Build project'
