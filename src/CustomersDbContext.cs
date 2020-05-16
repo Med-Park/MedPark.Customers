@@ -11,6 +11,8 @@ namespace MedPark.CustomersService
     {
         public DbSet<Customer> Customers {get;set;}
         public DbSet<Address> Address { get; set; }
+        public DbSet<MedicalScheme> MedicalScheme { get; set; }
+        public DbSet<CustomerMedicalScheme> CustomerMedicalScheme { get; set; }
 
         public CustomersDbContext(DbContextOptions<CustomersDbContext> options) : base(options)
         {
@@ -23,6 +25,8 @@ namespace MedPark.CustomersService
 
             builder.Entity<Customer>().ToTable("Customers");
             builder.Entity<Address>().ToTable("Address");
+            builder.Entity<MedicalScheme>().ToTable("MedicalScheme");
+            builder.Entity<CustomerMedicalScheme>().ToTable("CustomerMedicalScheme");
         }
     }
 }

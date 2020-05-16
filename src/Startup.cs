@@ -10,6 +10,7 @@ using MedPark.Common;
 using MedPark.Common.Handlers;
 using MedPark.Common.Messages;
 using MedPark.Common.RabbitMq;
+using MedPark.CustomersService.Config;
 using MedPark.CustomersService.Domain;
 using MedPark.CustomersService.Dto;
 using MedPark.CustomersService.Handlers.Customers;
@@ -59,14 +60,17 @@ namespace MedPark.CustomersService
             builder.AddRabbitMq();
             builder.AddRepository<Customer>();
             builder.AddRepository<Address>();
+            builder.AddRepository<MedicalScheme>();
+            builder.AddRepository<CustomerMedicalScheme>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();        
+                app.UseDeveloperExceptionPage();
+                SeedData.EnsureSeedData(serviceProvider);
             }
             else
             {
@@ -79,6 +83,7 @@ namespace MedPark.CustomersService
             app.UseRabbitMq()
                 .SubscribeCommand<CreateAddress>()
                 .SubscribeCommand<UpdateCustomerDetails>()
+                .SubscribeCommand<AddCustomerMedicalScheme>()
                 .SubscribeEvent<SignedUp>(@namespace: "identity")
                 .SubscribeEvent<AddressCreated>(@namespace: "gateway");              
 
