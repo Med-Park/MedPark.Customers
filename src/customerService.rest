@@ -1,5 +1,5 @@
 @apiUrl = https://localhost:44308/api/customers
-@customerId = 888E9C20-0401-4D6B-BC39-4F5F203C8A5A
+@customerId = CF223568-14AA-4ED4-A38C-801F8D1F5517
 
 
 ### Get customer by id
@@ -22,4 +22,14 @@ Content-Type: application/json
   "addressType": 1,
   "postalCode": "0181",
   "userId": "{{customerId}}"
+}
+
+### Add Customer medical scheme
+POST  {{apiUrl}}/addmedicalscheme
+Content-Type: application/json
+
+{
+  "customerId": "{{customerId}}",
+  "medicalSchemeId": "72023820-E822-444E-8A9D-CBFBEBB9C125",
+  "membershipNo": "12543678"
 }

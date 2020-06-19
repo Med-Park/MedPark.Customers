@@ -3,6 +3,7 @@ using MedPark.Common.Handlers;
 using MedPark.Common.RabbitMq;
 using MedPark.CustomersService.Domain;
 using MedPark.CustomersService.Messages.Commands;
+using MedPark.CustomersService.Messages.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +17,15 @@ namespace MedPark.CustomersService.Handlers.Customers
         private IMedParkRepository<MedicalScheme> _schemesRepo { get; }
         private IMedParkRepository<CustomerMedicalScheme> _customerSchemesRepo { get; }
 
-        public AddCustomerMedicalSchemeHandler(IMedParkRepository<CustomerMedicalScheme> customerSchemesRepo, IMedParkRepository<Customer> customerRepo, IMedParkRepository<MedicalScheme> schemesRepo)
+        private IBusPublisher _busPublisher;
+
+        public AddCustomerMedicalSchemeHandler(IMedParkRepository<CustomerMedicalScheme> customerSchemesRepo, IMedParkRepository<Customer> customerRepo, IMedParkRepository<MedicalScheme> schemesRepo, IBusPublisher busPublisher)
         {
             _customerRepo = customerRepo;
             _schemesRepo = schemesRepo;
             _customerSchemesRepo = customerSchemesRepo;
+
+            _busPublisher = busPublisher;
         }
 
         public async Task HandleAsync(AddCustomerMedicalScheme command, ICorrelationContext context)
@@ -44,6 +49,8 @@ namespace MedPark.CustomersService.Handlers.Customers
             newSchemeLink.SetCustomer(command.CustomerId);
             newSchemeLink.SetScheme(command.MedicalSchemeId);
             newSchemeLink.SetCustomerSchemeMembershipNo(command.MembershipNo);
+
+            await _busPublisher.PublishAsync(new CustomerMedicalSchemeAdded(command.CustomerId, command.MedicalSchemeId), null);
 
             await _customerSchemesRepo.AddAsync(newSchemeLink);
         }
