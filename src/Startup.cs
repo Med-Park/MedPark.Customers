@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AutoMapper;
+using Consul;
 using MedPark.Common;
+using MedPark.Common.Consul;
 using MedPark.Common.Handlers;
 using MedPark.Common.Messages;
 using MedPark.Common.RabbitMq;
@@ -46,6 +48,8 @@ namespace MedPark.CustomersService
         {            
             //Auto Mapper
             services.AddAutoMapper(typeof(Startup));
+            services.AddHealthChecks();
+            services.AddConsul();
 
             //Add DBContext
             services.AddDbContext<CustomersDbContext>(options => options.UseSqlServer(Configuration["Database:ConnectionString"]));
@@ -65,7 +69,7 @@ namespace MedPark.CustomersService
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostEnvironment env, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app, IHostEnvironment env, IServiceProvider serviceProvider, IHostApplicationLifetime lifetime, IConsulClient consulClient)
         {
             if (env.IsDevelopment())
             {
@@ -80,12 +84,25 @@ namespace MedPark.CustomersService
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            app.UseRouting();
+            app.UseEndpoints(endpoit =>
+            {
+                endpoit.MapHealthChecks("/health");
+            });
+            app.UseHttpsRedirection();
+
             app.UseRabbitMq()
                 .SubscribeCommand<CreateAddress>()
                 .SubscribeCommand<UpdateCustomerDetails>()
                 .SubscribeCommand<AddCustomerMedicalScheme>()
                 .SubscribeEvent<SignedUp>(@namespace: "identity")
-                .SubscribeEvent<AddressCreated>(@namespace: "gateway");              
+                .SubscribeEvent<AddressCreated>(@namespace: "gateway");
+
+            var serviceID = app.UseConsul();
+            lifetime.ApplicationStopped.Register(() =>
+            {
+                consulClient.Agent.ServiceDeregister(serviceID);
+            });
 
             app.UseMvcWithDefaultRoute();
         }
